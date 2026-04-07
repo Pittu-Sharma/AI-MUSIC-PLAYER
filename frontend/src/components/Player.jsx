@@ -14,7 +14,6 @@ const Player = ({ track, isPlaying, setIsPlaying }) => {
   const [fullStreamUrl, setFullStreamUrl] = useState(null);
   const [isResolving, setIsResolving] = useState(false);
 
-
   useEffect(() => {
     if (audioRef.current && track) {
       if (isPlaying) {
@@ -87,8 +86,11 @@ const Player = ({ track, isPlaying, setIsPlaying }) => {
   }, [volume, isMuted]);
 
   const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    
     const current = audioRef.current.currentTime;
     const dur = audioRef.current.duration;
+    
     setCurrentTime(current);
     setDuration(dur || 0);
     setProgress((current / dur) * 100 || 0);
@@ -137,7 +139,7 @@ const Player = ({ track, isPlaying, setIsPlaying }) => {
     >
       <audio 
         ref={audioRef}
-        src={fullStreamUrl || track.preview}
+        src={fullStreamUrl || ""}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}

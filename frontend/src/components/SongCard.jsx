@@ -1,8 +1,38 @@
-import React from 'react';
-import { Play, Pause, Heart, Music } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Play, Pause, Heart, Music, Headphones, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SongCard = ({ track, onPlay, isPlaying, isCurrent, toggleFavorite, isFavorite }) => {
+  const audioRef = useRef(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+
+  useEffect(() => {
+    if (track && track.preview) {
+      audioRef.current = new Audio(track.preview);
+      audioRef.current.volume = 0.4;
+    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [track]);
+
+  const handleMouseEnter = () => {
+    if (!isCurrent && audioRef.current) {
+      audioRef.current.play().then(() => setIsPreviewing(true)).catch(e => console.log('Preview playback prevented by browser'));
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPreviewing(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -15,6 +45,8 @@ const SongCard = ({ track, onPlay, isPlaying, isCurrent, toggleFavorite, isFavor
         borderColor: isCurrent ? 'var(--accent-cyan)' : 'var(--accent-purple)'
       }}
       className="glass-panel song-card"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         padding: '16px',
         cursor: 'pointer',
@@ -109,6 +141,32 @@ const SongCard = ({ track, onPlay, isPlaying, isCurrent, toggleFavorite, isFavor
             style={{ transition: 'all 0.3s ease' }}
           />
         </button>
+
+        {/* Preview Indicator */}
+        {track.preview && !isCurrent && (
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            background: isPreviewing ? 'var(--accent-cyan)' : 'rgba(0,0,0,0.5)',
+            border: isPreviewing ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '20px',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '0.65rem',
+            fontWeight: '600',
+            color: isPreviewing ? 'black' : 'white',
+            backdropFilter: 'blur(10px)',
+            zIndex: 10,
+            transition: 'all 0.3s ease',
+            pointerEvents: 'none'
+          }}>
+            {isPreviewing ? <Volume2 size={12} /> : <Headphones size={12} />}
+            {isPreviewing ? 'Previewing 30s...' : 'Hover to Preview'}
+          </div>
+        )}
 
         {/* Playing Indicator */}
         {isCurrent && isPlaying && (
